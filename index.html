@@ -13,11 +13,26 @@
   <div class="bg-blue-600 text-white p-5 rounded-t-2xl text-center">
     <h1 class="text-2xl font-bold">Laporan Harian Bus</h1>
     <p class="text-blue-100 text-sm">Depok - Bandara PP</p>
-    <div class="mt-3 bg-white/20 rounded-xl p-3">
-      <p class="text-xs">Total Penumpang Hari Ini</p>
-      <p id="totalPenumpang" class="text-2xl font-bold">0 Orang</p>
-      <p id="totalTrip" class="text-xs">0 Trip</p>
+
+    <p class="font-bold mt-4 mb-2 text-sm tracking-wide">TOTAL PNP HARI INI</p>
+    <div class="grid grid-cols-3 gap-2">
+      <div class="bg-white text-blue-700 rounded-xl p-3">
+        <p class="text-[11px] font-bold leading-tight">Depok -<br>Bandara</p>
+        <p id="totalDepokBandara" class="text-xl font-bold mt-1">0</p>
+        <p class="text-[10px]">Orang</p>
+      </div>
+      <div class="bg-white text-blue-700 rounded-xl p-3">
+        <p class="text-[11px] font-bold leading-tight">Bandara -<br>Depok</p>
+        <p id="totalBandaraDepok" class="text-xl font-bold mt-1">0</p>
+        <p class="text-[10px]">Orang</p>
+      </div>
+      <div class="bg-yellow-400 text-black rounded-xl p-3">
+        <p class="text-[11px] font-bold leading-tight">Grand<br>Total</p>
+        <p id="totalGrand" class="text-xl font-bold mt-1">0</p>
+        <p class="text-[10px]">Orang</p>
+      </div>
     </div>
+    <p id="totalTrip" class="text-xs mt-2 text-blue-100">0 Trip Hari Ini</p>
   </div>
 
   <div class="bg-white p-5 rounded-b-2xl shadow">
@@ -66,6 +81,14 @@ const refLaporan = db.ref('laporan');
 
 document.getElementById('tanggal').valueAsDate = new Date();
 
+function getTanggalHariIni(){
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return y+'-'+m+'-'+day;
+}
+
 function simpan(){
   const tanggal = document.getElementById('tanggal').value;
   const rute = document.getElementById('rute').value;
@@ -79,32 +102,43 @@ function simpan(){
   }
   const noBody = 'A' + noBodyAngka;
   refLaporan.push({ tanggal, rute, noBody, jam, penumpang, createdAt: Date.now() });
-  document.getElementById('status').innerText = '✅ Tersimpan! ' + noBody + ' - ' + rute;
+  document.getElementById('status').innerText = '✅ Tersimpan! ' + noBody + ' - ' + rute + ' - ' + penumpang + ' Orang';
   document.getElementById('noBody').value = '';
   document.getElementById('penumpang').value = '';
 }
 
-refLaporan.orderByChild('createdAt').on('value', (snap)=>{
+refLaporan.on('value', (snap)=>{
   const data = snap.val() || {};
   const list = Object.entries(data).reverse();
-  let totalP = 0;
+  const tglHariIni = getTanggalHariIni();
+  let totalDB = 0;
+  let totalBD = 0;
+  let tripHariIni = 0;
   let html = '';
   list.forEach(([id, v])=>{
-    totalP += v.penumpang || 0;
+    const pnp = parseInt(v.penumpang) || 0;
+    if(v.tanggal === tglHariIni){
+      tripHariIni++;
+      if(v.rute === 'Depok - Bandara') totalDB += pnp;
+      if(v.rute === 'Bandara - Depok') totalBD += pnp;
+    }
     html += `<div class="bg-white p-4 rounded-xl shadow flex justify-between items-center">
       <div>
         <p class="font-bold text-lg">${v.noBody} • ${v.rute}</p>
         <p class="text-sm text-gray-500">${v.tanggal} • Jam ${v.jam}</p>
       </div>
       <div class="text-right">
-        <p class="font-bold text-blue-600 text-lg">${v.penumpang} Orang</p>
+        <p class="font-bold text-blue-600 text-lg">${pnp} Orang</p>
         <button onclick="hapus('${id}')" class="text-red-500 text-xs">Hapus</button>
       </div>
     </div>`;
   });
-  document.getElementById('totalPenumpang').innerText = totalP + ' Orang';
-  document.getElementById('totalTrip').innerText = list.length + ' Trip';
-  document.getElementById('list').innerHTML = html || '<p class="text-center text-gray-400">Belum ada laporan. Database masih bersih ✨</p>';
+  const grand = totalDB + totalBD;
+  document.getElementById('totalDepokBandara').innerText = totalDB;
+  document.getElementById('totalBandaraDepok').innerText = totalBD;
+  document.getElementById('totalGrand').innerText = grand;
+  document.getElementById('totalTrip').innerText = tripHariIni + ' Trip Hari Ini';
+  document.getElementById('list').innerHTML = html || '<p class="text-center text-gray-400">Belum ada laporan.</p>';
 });
 
 function hapus(id){ if(confirm('Hapus laporan ini?')) refLaporan.child(id).remove(); }
