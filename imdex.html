@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Laporan Harian Bus - Hiba Utama</title>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 min-h-screen pb-20">
+<div class="max-w-3xl mx-auto p-4">
+  <div class="bg-blue-700 text-white rounded-2xl p-5 shadow">
+    <h1 class="text-2xl font-bold">🚌 Laporan Harian Bus</h1>
+    <p class="text-blue-100">Hiba Utama • Realtime Firebase</p>
+    <div class="grid grid-cols-3 gap-2 mt-4">
+      <div class="bg-white/20 rounded-xl p-3"><p class="text-xs">Total Setoran</p><p id="totSetoran" class="font-bold text-lg">Rp 0</p></div>
+      <div class="bg-white/20 rounded-xl p-3"><p class="text-xs">Total Pengeluaran</p><p id="totKeluar" class="font-bold text-lg">Rp 0</p></div>
+      <div class="bg-green-400 text-green-900 rounded-xl p-3"><p class="text-xs">Total Bersih</p><p id="totBersih" class="font-bold text-lg">Rp 0</p></div>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-2xl p-4 shadow mt-4">
+    <h2 class="font-bold mb-3">+ Tambah Laporan Baru</h2>
+    <div class="grid grid-cols-2 gap-2">
+      <input id="tanggal" type="date" class="border rounded-xl p-3 col-span-2">
+      <input id="nopol" placeholder="No. Polisi - ex: B 1234 AA" class="border rounded-xl p-3 col-span-2">
+      <input id="trayek" placeholder="Trayek - ex: Jakarta - Merak" class="border rounded-xl p-3">
+      <input id="sopir" placeholder="Nama Sopir" class="border rounded-xl p-3">
+      <input id="setoran" type="number" placeholder="Setoran (Rp)" class="border rounded-xl p-3">
+      <input id="solar" type="number" placeholder="Solar (Rp)" class="border rounded-xl p-3">
+      <input id="pengeluaran" type="number" placeholder="Pengeluaran Lain (Rp)" class="border rounded-xl p-3">
+      <input id="keterangan" placeholder="Keterangan" class="border rounded-xl p-3">
+    </div>
+    <button id="btnSimpan" class="w-full bg-blue-700 text-white font-bold py-3 rounded-xl mt-3">SIMPAN LAPORAN</button>
+    <p id="status" class="text-center text-sm mt-2 text-green-600"></p>
+  </div>
+
+  <div class="flex gap-2 mt-4">
+    <input id="cariTanggal" type="date" class="flex-1 border rounded-xl p-3 bg-white">
+    <button id="btnSemua" class="bg-slate-800 text-white px-4 rounded-xl">Semua</button>
+  </div>
+
+  <div id="list" class="space-y-3 mt-4"></div>
+  <p class="text-center text-xs text-slate-400 mt-6">Data tersimpan di Firestore • Koleksi: laporan</p>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCurWAV1Ex5ja8WQ--Cpwy5-mAguC7Nou4",
+  authDomain: "laporan-harian-bus-hiba-utama.firebaseapp.com",
+  projectId: "laporan-harian-bus-hiba-utama",
+  storageBucket: "laporan-harian-bus-hiba-utama.firebasestorage.app",
+  messagingSenderId: "980808125025",
+  appId: "1:980808125025:web:bdbb62ed2f3a9a48f47820",
+  measurementId: "G-BQ9KXRZRNH"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const col = collection(db, "laporan");
+const fmt = n => "Rp " + Number(n||0).toLocaleString("id-ID");
+
+document.getElementById("tanggal").valueAsDate = new Date();
+
+let allData = [];
+const q = query(col, orderBy("tanggal","desc"));
+onSnapshot(q, (snap)=>{
+  allData = [];
+  snap.forEach(d=> allData.push({id:d.id, ...d.data()}));
+  render();
+});
+
+function render(){
+  const filter = document.getElementById("cariTanggal").value;
+  const data = filter ? allData.filter(x=>x.tanggal===filter) : allData;
+  let s=0, k=0;
+  allData.forEach(x=>{ s+=Number(x.setoran||0); k+=Number(x.solar||0)+Number(x.pengeluaran||0); });
+  document.getElementById("totSetoran").innerText = fmt(s);
+  document.getElementById("totKeluar").innerText = fmt(k);
+  document.getElementById("totBersih").innerText = fmt(s-k);
+
+  const list = document.getElementById("list");
+  if(data.length===0){ list.innerHTML = `<div class="bg-white p-6 rounded-2xl text-center text-slate-400">Belum ada laporan. Database masih bersih ✨<br>Silahkan tambah laporan baru di atas.</div>`; return; }
+  list.innerHTML = data.map(x=>{
+    const bersih = Number(x.setoran||0)-Number(x.solar||0)-Number(x.pengeluaran||0);
+    return `<div class="bg-white rounded-2xl p-4 shadow flex justify-between">
+      <div><p class="font-bold">${x.tanggal} • ${x.nopol||'-'}</p>
+      <p class="text-sm text-slate-500">${x.trayek||'-'} • Sopir: ${x.sopir||'-'}</p>
+      <p class="text-sm mt-1">Setoran: ${fmt(x.setoran)} | Solar: ${fmt(x.solar)} | Lain: ${fmt(x.pengeluaran)}</p>
+      <p class="text-sm font-bold text-green-700">Bersih: ${fmt(bersih)} ${x.keterangan? '• '+x.keterangan:''}</p></div>
+      <button onclick="hapus('${x.id}')" class="text-red-500 font-bold h-fit">✕</button>
+    </div>`;
+  }).join("");
+}
+
+window.hapus = async (id)=>{
+  if(confirm("Hapus laporan ini?")) await deleteDoc(doc(db,"laporan",id));
+};
+
+document.getElementById("btnSimpan").onclick = async ()=>{
+  const tanggal = document.getElementById("tanggal").value;
+  const nopol = document.getElementById("nopol").value;
+  const trayek = document.getElementById("trayek").value;
+  const sopir = document.getElementById("sopir").value;
+  const setoran = Number(document.getElementById("setoran").value||0);
+  const solar = Number(document.getElementById("solar").value||0);
+  const pengeluaran = Number(document.getElementById("pengeluaran").value||0);
+  const keterangan = document.getElementById("keterangan").value;
+  if(!tanggal || !nopol){ alert("Isi tanggal & nopol dulu Aa"); return; }
+  document.getElementById("status").innerText = "Menyimpan...";
+  await addDoc(col, {tanggal,nopol,trayek,sopir,setoran,solar,pengeluaran,keterangan, createdAt: Date.now()});
+  document.getElementById("status").innerText = "✅ Tersimpan!";
+  ["nopol","trayek","sopir","setoran","solar","pengeluaran","keterangan"].forEach(id=>document.getElementById(id).value="");
+  setTimeout(()=>document.getElementById("status").innerText="",2000);
+};
+document.getElementById("cariTanggal").onchange = render;
+document.getElementById("btnSemua").onclick = ()=>{ document.getElementById("cariTanggal").value=""; render(); };
+</script>
+</body>
+</html>
