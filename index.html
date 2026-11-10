@@ -3,234 +3,145 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Laporan Harian - Depok Bandara</title>
+<title>Laporan Harian Bus</title>
+<script src="https://cdn.tailwindcss.com"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-<style>
-*{box-sizing:border-box;margin:0;padding:0;font-family:Arial,sans-serif}
-body{background:#f0f2f5;padding-bottom:30px}
-.topbar{background:#0d47a1;color:#fff;display:flex;align-items:center;gap:12px;padding:14px 16px;position:sticky;top:0;z-index:10}
-.hamburger{font-size:26px;cursor:pointer;background:none;border:none;color:#fff}
-.topbar h1{font-size:18px}
-.drawer{position:fixed;top:0;left:-260px;width:260px;height:100%;background:#fff;box-shadow:2px 0 10px rgba(0,0,0,.2);transition:.3s;z-index:20;padding-top:10px}
-.drawer.open{left:0}
-.drawer a{display:block;padding:14px 18px;text-decoration:none;color:#222;border-bottom:1px solid #eee;font-weight:bold}
-.drawer a.active{background:#e3f2fd;color:#0d47a1}
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;z-index:15}
-.overlay.show{display:block}
-.wrap{padding:14px;max-width:600px;margin:auto}
-.cards{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.card{background:#fff;border-radius:12px;padding:14px;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,.08)}
-.card h3{font-size:13px;color:#666}
-.card .big{font-size:32px;font-weight:bold;color:#0d47a1;margin:6px 0}
-.limo-mini{background:#fff3e0;border:1px dashed #ff9800;border-radius:8px;padding:6px;font-size:13px;margin-top:6px}
-.limo-mini b{color:#e65100}
-.card.total{grid-column:span 2;background:#0d47a1;color:#fff}
-.card.total .big{color:#fff}
-.form{background:#fff;border-radius:12px;padding:16px;margin-top:14px;box-shadow:0 2px 6px rgba(0,0,0,.08)}
-.form label{display:block;font-size:13px;font-weight:bold;margin:12px 0 5px}
-.form input,.form select{width:100%;padding:11px;border:1px solid #ddd;border-radius:8px;font-size:15px}
-.btn{width:100%;padding:13px;background:#0d47a1;color:#fff;border:none;border-radius:8px;font-size:16px;font-weight:bold;margin-top:16px;cursor:pointer}
-.btn:active{opacity:.85}
-table{width:100%;border-collapse:collapse;background:#fff;font-size:13px;margin-top:12px}
-th,td{border:1px solid #ddd;padding:8px;text-align:center}
-th{background:#0d47a1;color:#fff}
-tfoot td{font-weight:bold;background:#e3f2fd}
-.date-row{display:flex;gap:8px;align-items:center;margin-top:12px}
-.date-row input{flex:1;padding:10px;border:1px solid #ddd;border-radius:8px}
-.hidden{display:none}
-.list-item{background:#fff;padding:10px;border-radius:8px;margin-top:8px;font-size:13px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
-</style>
 </head>
-<body>
+<body class="bg-gray-100 min-h-screen p-4">
+<div class="max-w-md mx-auto">
+  <div class="bg-blue-600 text-white p-5 rounded-t-2xl text-center">
+    <h1 class="text-2xl font-bold">Laporan Harian Bus</h1>
+    <p class="text-blue-100 text-sm">Depok - Bandara PP</p>
 
-<div class="topbar">
-  <button class="hamburger" onclick="toggleMenu()">☰</button>
-  <h1>Laporan Harian</h1>
-</div>
-
-<div class="overlay" id="overlay" onclick="toggleMenu()"></div>
-<div class="drawer" id="drawer">
-  <a href="#" id="m-rekap" onclick="showPage('rekap');return false;">📋 Rekap Laporan Harian</a>
-  <a href="#" id="m-form" class="active" onclick="showPage('form');return false;">📝 Form Laporan</a>
-  <a href="#" id="m-bulanan" onclick="showPage('bulanan');return false;">📅 Report Bulanan</a>
-</div>
-
-<div class="wrap">
-  <!-- HEADER CARDS - SELALU MUNCUL -->
-  <div class="cards">
-    <div class="card">
-      <h3>DEPOK - BANDARA</h3>
-      <div class="big" id="totDepokBandara">0</div>
-      <div style="font-size:12px;color:#666">Orang</div>
-      <div class="limo-mini">🛺 Limo: <b id="limoDepok">0</b> Orang</div>
+    <p class="font-bold mt-4 mb-2 text-sm tracking-wide">TOTAL PNP HARI INI</p>
+    <div class="grid grid-cols-3 gap-2">
+      <div class="bg-white text-blue-700 rounded-xl p-3">
+        <p class="text-[11px] font-bold leading-tight">Depok -<br>Bandara</p>
+        <p id="totalDepokBandara" class="text-xl font-bold mt-1">0</p>
+        <p class="text-[10px]">Orang</p>
+      </div>
+      <div class="bg-white text-blue-700 rounded-xl p-3">
+        <p class="text-[11px] font-bold leading-tight">Bandara -<br>Depok</p>
+        <p id="totalBandaraDepok" class="text-xl font-bold mt-1">0</p>
+        <p class="text-[10px]">Orang</p>
+      </div>
+      <div class="bg-yellow-400 text-black rounded-xl p-3">
+        <p class="text-[11px] font-bold leading-tight">Grand<br>Total</p>
+        <p id="totalGrand" class="text-xl font-bold mt-1">0</p>
+        <p class="text-[10px]">Orang</p>
+      </div>
     </div>
-    <div class="card">
-      <h3>BANDARA - DEPOK</h3>
-      <div class="big" id="totBandaraDepok">0</div>
-      <div style="font-size:12px;color:#666">Orang</div>
-      <div class="limo-mini">🛺 Limo: <b id="limoBandara">0</b> Orang</div>
-    </div>
-    <div class="card total">
-      <h3 style="color:#fff">GRAND TOTAL</h3>
-      <div class="big" id="grandTotal">0 Orang</div>
-      <div style="font-size:12px" id="tripCount">0 Trip Hari Ini</div>
-    </div>
+    <p id="totalTrip" class="text-xs mt-2 text-blue-100">0 Trip Hari Ini</p>
   </div>
 
-  <!-- PAGE: FORM -->
-  <div id="page-form">
-    <div class="form">
-      <label>No. Unit</label>
-      <input id="unit" placeholder="Contoh: A66">
-      <label>Rute</label>
-      <select id="rute">
-        <option value="Depok-Bandara">Depok - Bandara</option>
-        <option value="Bandara-Depok">Bandara - Depok</option>
-      </select>
-      <label>Jam Keberangkatan</label>
-      <input type="time" id="jam">
-      <label>Jumlah Penumpang (Total)</label>
-      <input type="number" id="penumpang" placeholder="Contoh: 25" inputmode="numeric">
-      <label>Jumlah Limo (Manual - Hanya Info)</label>
-      <input type="number" id="limo" placeholder="Contoh: 5 - Kalau 0 isi 0" inputmode="numeric" value="0">
-      <div style="font-size:12px;color:#888;margin-top:6px">* Limo tidak menambah Grand Total. Limo adalah bagian dari Total Penumpang di atas.</div>
-      <button class="btn" onclick="simpan()">SIMPAN</button>
-      <div id="msg" style="text-align:center;margin-top:10px;font-weight:bold;color:green"></div>
+  <div class="bg-white p-5 rounded-b-2xl shadow">
+    <label class="text-sm font-bold">Tanggal</label>
+    <input id="tanggal" type="date" class="w-full border p-3 rounded-xl mt-1 mb-3">
+
+    <label class="text-sm font-bold">Rute</label>
+    <select id="rute" class="w-full border p-3 rounded-xl mt-1 mb-3">
+      <option value="Depok - Bandara">Depok - Bandara</option>
+      <option value="Bandara - Depok">Bandara - Depok</option>
+    </select>
+
+    <label class="text-sm font-bold">No.Body</label>
+    <div class="flex mt-1 mb-3">
+      <span class="bg-gray-200 border border-r-0 px-4 flex items-center font-bold rounded-l-xl text-lg">A</span>
+      <input id="noBody" type="number" inputmode="numeric" placeholder="47" class="w-full border p-3 rounded-r-xl text-lg font-bold">
     </div>
-    <div id="listBawah"></div>
+
+    <label class="text-sm font-bold">Jam</label>
+    <input id="jam" type="time" class="w-full border p-3 rounded-xl mt-1 mb-3">
+
+    <label class="text-sm font-bold">Total Penumpang</label>
+    <input id="penumpang" type="number" inputmode="numeric" placeholder="Contoh: 25" class="w-full border p-3 rounded-xl mt-1 mb-3">
+
+    <button onclick="simpan()" class="w-full bg-blue-600 text-white p-3 rounded-xl font-bold">SIMPAN LAPORAN</button>
+    <p id="status" class="text-center text-sm mt-2 text-green-600"></p>
   </div>
 
-  <!-- PAGE: REKAP HARIAN -->
-  <div id="page-rekap" class="hidden">
-    <div class="date-row">
-      <label style="font-size:13px;font-weight:bold">Tanggal:</label>
-      <input type="date" id="tglRekap">
-    </div>
-    <table>
-      <thead><tr><th>No.</th><th>Depok</th><th>Dari Limo</th><th>Bandara</th><th>Ke Limo</th><th>Total</th></tr></thead>
-      <tbody id="bodyRekap"></tbody>
-      <tfoot><tr><td>TOTAL</td><td id="fDepok">0</td><td id="fDariLimo">0</td><td id="fBandara">0</td><td id="fKeLimo">0</td><td id="fTotal">0</td></tr></tfoot>
-    </table>
-    <div id="detailRekap" style="margin-top:10px"></div>
-  </div>
-
-  <!-- PAGE: BULANAN -->
-  <div id="page-bulanan" class="hidden">
-    <div class="date-row">
-      <label style="font-size:13px;font-weight:bold">Bulan:</label>
-      <input type="month" id="blnBulanan">
-    </div>
-    <table>
-      <thead><tr><th>Tanggal</th><th>Depok</th><th>Dari Limo</th><th>Bandara</th><th>Ke Limo</th><th>Total</th></tr></thead>
-      <tbody id="bodyBulanan"></tbody>
-      <tfoot><tr><td>TOTAL</td><td id="bDepok">0</td><td id="bDariLimo">0</td><td id="bBandara">0</td><td id="bKeLimo">0</td><td id="bTotal">0</td></tr></tfoot>
-    </table>
-  </div>
-
+  <div id="list" class="mt-4 space-y-3"></div>
 </div>
 
 <script>
-// ===== PENTING: PAKAI CONFIG FIREBASE AA YANG LAMA, JANGAN DIGANTI =====
-// Copy config dari file lama Aa yang sudah jalan (yang ada asia-southeast1)
 const firebaseConfig = {
-  apiKey: "ISI_APIKEY_LAMA_AA",
-  authDomain: "ISI_AUTHDOMAIN_LAMA",
-  databaseURL: "ISI_DATABASEURL_LAMA_ASIA_SOUTHEAST1",
-  projectId: "ISI_PROJECTID_LAMA",
-  storageBucket: "ISI_STORAGE_LAMA",
-  messagingSenderId: "ISI_SENDER_LAMA",
-  appId: "ISI_APPID_LAMA"
+  apiKey: "AIzaSyCurWAV1Ex5ja8WQ--Cpwy5-mAguC7Nou4",
+  authDomain: "laporan-harian-bus-hiba-utama.firebaseapp.com",
+  databaseURL: "https://laporan-harian-bus-hiba-utama-default-rtdb.firebaseio.com",
+  projectId: "laporan-harian-bus-hiba-utama",
+  storageBucket: "laporan-harian-bus-hiba-utama.firebasestorage.app",
+  messagingSenderId: "980808125025",
+  appId: "1:980808125025:web:bdbb62ed2f3a9a48f47820",
+  measurementId: "G-BQ9KXRZRNH"
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
+const refLaporan = db.ref('laporan');
 
-function todayStr(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
-document.getElementById('tglRekap').value = todayStr();
-document.getElementById('blnBulanan').value = todayStr().slice(0,7);
-document.getElementById('jam').value = new Date().toTimeString().slice(0,5);
+document.getElementById('tanggal').valueAsDate = new Date();
 
-function toggleMenu(){
-  document.getElementById('drawer').classList.toggle('open');
-  document.getElementById('overlay').classList.toggle('show');
-}
-function showPage(p){
-  ['form','rekap','bulanan'].forEach(x=>{
-    document.getElementById('page-'+x).classList.toggle('hidden', x!==p);
-    document.getElementById('m-'+x).classList.toggle('active', x===p);
-  });
-  toggleMenu();
-  loadData();
+function getTanggalHariIni(){
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return y+'-'+m+'-'+day;
 }
 
 function simpan(){
-  const unit=document.getElementById('unit').value.trim();
-  const rute=document.getElementById('rute').value;
-  const jam=document.getElementById('jam').value;
-  const penumpang=parseInt(document.getElementById('penumpang').value||0);
-  const limo=parseInt(document.getElementById('limo').value||0);
-  if(!unit||!penumpang){ alert('Isi Unit & Penumpang dulu Aa!'); return; }
-  let depok=0,dariLimo=0,bandara=0,keLimo=0;
-  if(rute==='Depok-Bandara'){ depok=penumpang-limo; dariLimo=limo; }
-  else{ bandara=penumpang-limo; keLimo=limo; }
-  const tgl=todayStr();
-  db.ref('laporan/'+tgl).push({unit,rute,jam,penumpang,limo,depok,dariLimo,bandara,keLimo,total:penumpang,ts:Date.now()});
-  document.getElementById('msg').innerText='✅ Tersimpan! '+unit+' - '+rute+' - '+penumpang+' Orang (Limo: '+limo+')';
-  document.getElementById('penumpang').value=''; document.getElementById('limo').value='0';
-  loadData();
+  const tanggal = document.getElementById('tanggal').value;
+  const rute = document.getElementById('rute').value;
+  const noBodyAngka = document.getElementById('noBody').value;
+  const jam = document.getElementById('jam').value;
+  const penumpang = parseInt(document.getElementById('penumpang').value) || 0;
+
+  if(!tanggal || !noBodyAngka || !jam || !penumpang){
+    alert('Isi semua ya Aa!');
+    return;
+  }
+  const noBody = 'A' + noBodyAngka;
+  refLaporan.push({ tanggal, rute, noBody, jam, penumpang, createdAt: Date.now() });
+  document.getElementById('status').innerText = '✅ Tersimpan! ' + noBody + ' - ' + rute + ' - ' + penumpang + ' Orang';
+  document.getElementById('noBody').value = '';
+  document.getElementById('penumpang').value = '';
 }
 
-function loadData(){
-  const tgl=document.getElementById('tglRekap').value||todayStr();
-  db.ref('laporan/'+tgl).on('value', snap=>{
-    const data=snap.val()||{};
-    const arr=Object.values(data).sort((a,b)=>a.ts-b.ts);
-    let sDepok=0,sDari=0,sBandara=0,sKe=0,sLimoDepok=0,sLimoBandara=0,sTotDB=0,sTotBD=0;
-    arr.forEach(r=>{ sDepok+=r.depok||0; sDari+=r.dariLimo||0; sBandara+=r.bandara||0; sKe+=r.keLimo||0; if(r.rute==='Depok-Bandara'){sTotDB+=r.penumpang||0; sLimoDepok+=r.limo||0;} else {sTotBD+=r.penumpang||0; sLimoBandara+=r.limo||0;} });
-    // Header cards
-    document.getElementById('totDepokBandara').innerText=sTotDB;
-    document.getElementById('totBandaraDepok').innerText=sTotBD;
-    document.getElementById('grandTotal').innerText=(sTotDB+sTotBD)+' Orang';
-    document.getElementById('limoDepok').innerText=sLimoDepok;
-    document.getElementById('limoBandara').innerText=sLimoBandara;
-    document.getElementById('tripCount').innerText=arr.length+' Trip Hari Ini';
-    // Rekap Harian
-    let html=''; arr.forEach((r,i)=>{ html+=`<tr><td>${i+1}</td><td>${r.depok||0}</td><td>${r.dariLimo||0}</td><td>${r.bandara||0}</td><td>${r.keLimo||0}</td><td>${r.total||0}</td></tr>`; });
-    if(!arr.length) html='<tr><td colspan="6">Belum ada laporan hari ini</td></tr>';
-    document.getElementById('bodyRekap').innerHTML=html;
-    document.getElementById('fDepok').innerText=sDepok;
-    document.getElementById('fDariLimo').innerText=sDari;
-    document.getElementById('fBandara').innerText=sBandara;
-    document.getElementById('fKeLimo').innerText=sKe;
-    document.getElementById('fTotal').innerText=sDepok+sDari+sBandara+sKe;
-    // List bawah form
-    document.getElementById('listBawah').innerHTML=arr.slice().reverse().map(r=>`<div class="list-item"><b>${r.unit}</b> - ${r.rute} - ${r.jam||''} - ${r.penumpang} Orang (Limo: ${r.limo})</div>`).join('');
-    document.getElementById('detailRekap').innerHTML=arr.map((r,i)=>`<div class="list-item">${i+1}. <b>${r.unit}</b> | ${r.jam||''} | ${r.rute} | ${r.penumpang} Org | Limo ${r.limo}</div>`).join('');
+refLaporan.on('value', (snap)=>{
+  const data = snap.val() || {};
+  const list = Object.entries(data).reverse();
+  const tglHariIni = getTanggalHariIni();
+  let totalDB = 0;
+  let totalBD = 0;
+  let tripHariIni = 0;
+  let html = '';
+  list.forEach(([id, v])=>{
+    const pnp = parseInt(v.penumpang) || 0;
+    if(v.tanggal === tglHariIni){
+      tripHariIni++;
+      if(v.rute === 'Depok - Bandara') totalDB += pnp;
+      if(v.rute === 'Bandara - Depok') totalBD += pnp;
+    }
+    html += `<div class="bg-white p-4 rounded-xl shadow flex justify-between items-center">
+      <div>
+        <p class="font-bold text-lg">${v.noBody} • ${v.rute}</p>
+        <p class="text-sm text-gray-500">${v.tanggal} • Jam ${v.jam}</p>
+      </div>
+      <div class="text-right">
+        <p class="font-bold text-blue-600 text-lg">${pnp} Orang</p>
+        <button onclick="hapus('${id}')" class="text-red-500 text-xs">Hapus</button>
+      </div>
+    </div>`;
   });
-  // Bulanan
-  const bln=document.getElementById('blnBulanan').value||todayStr().slice(0,7);
-  db.ref('laporan').on('value', snap=>{
-    const all=snap.val()||{};
-    let rows=[]; let tD=0,tDL=0,tB=0,tKL=0,tT=0;
-    Object.keys(all).sort().forEach(tanggal=>{
-      if(!tanggal.startsWith(bln)) return;
-      const arr=Object.values(all[tanggal]);
-      let d=0,dl=0,b=0,kl=0;
-      arr.forEach(r=>{d+=r.depok||0; dl+=r.dariLimo||0; b+=r.bandara||0; kl+=r.keLimo||0;});
-      let tot=d+dl+b+kl; tD+=d; tDL+=dl; tB+=b; tKL+=kl; tT+=tot;
-      rows.push(`<tr><td>${tanggal}</td><td>${d}</td><td>${dl}</td><td>${b}</td><td>${kl}</td><td>${tot}</td></tr>`);
-    });
-    document.getElementById('bodyBulanan').innerHTML=rows.join('')||'<tr><td colspan="6">Belum ada data bulan ini</td></tr>';
-    document.getElementById('bDepok').innerText=tD;
-    document.getElementById('bDariLimo').innerText=tDL;
-    document.getElementById('bBandara').innerText=tB;
-    document.getElementById('bKeLimo').innerText=tKL;
-    document.getElementById('bTotal').innerText=tT;
-  });
-}
-document.getElementById('tglRekap').addEventListener('change', loadData);
-document.getElementById('blnBulanan').addEventListener('change', loadData);
-loadData();
+  const grand = totalDB + totalBD;
+  document.getElementById('totalDepokBandara').innerText = totalDB;
+  document.getElementById('totalBandaraDepok').innerText = totalBD;
+  document.getElementById('totalGrand').innerText = grand;
+  document.getElementById('totalTrip').innerText = tripHariIni + ' Trip Hari Ini';
+  document.getElementById('list').innerHTML = html || '<p class="text-center text-gray-400">Belum ada laporan.</p>';
+});
+
+function hapus(id){ if(confirm('Hapus laporan ini?')) refLaporan.child(id).remove(); }
 </script>
 </body>
-  </html>
+</html>
